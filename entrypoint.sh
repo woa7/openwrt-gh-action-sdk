@@ -31,6 +31,11 @@ ALL_CUSTOM_FEEDS+="$FEEDNAME"
 cat feeds.conf
 
 ./scripts/feeds update -a > /dev/null
+
+if [ -z "$CONFIG_CCACHE" ]; then
+	echo "CONFIG_CCACHE=$CONFIG_CCACHE" >> .config
+	echo "Setting CONFIG_CCACHE=$CONFIG_CCACHE to .config" >> .config
+fi
 make defconfig > /dev/null
 
 if [ -z "$PACKAGES" ]; then

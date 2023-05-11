@@ -7,15 +7,25 @@ runs:
     - run: |
         echo "artifacts_dir=${ARTIFACTS_DIR:-$GITHUB_WORKSPACE}" >> "$GITHUB_OUTPUT"
         echo "feed_dir=${FEED_DIR:-$GITHUB_WORKSPACE}" >> "$GITHUB_OUTPUT"
+        # BUG:  github.workspace and runner.workspace are incorrect inside container jobs #2058  /  see https://github.com/actions/runner/issues/2058
+        echo "CCACHE_DIR=${CCACHE_DIR:-${{ runner.workspace }}/.ccache}" >> "$GITHUB_ENV"
+        echo "ccache_dir=${CCACHE_DIR:-${{ runner.workspace }}/.ccache}" >> "$GITHUB_OUTPUT"
+        echo "ccache_dir_wrt=${ccache_dir_wrt:-/builder/.ccache}" >> "$GITHUB_OUTPUT"
+        echo "CONFIG_CCACHE=${CONFIG_CCACHE:-y}" >> "$GITHUB_ENV"
       shell: bash
       id: inputs
-    - run: sudo chown -R 1000:1000 ${{ steps.inputs.outputs.artifacts_dir }} ${{ steps.inputs.outputs.feed_dir }}
+    - run: |
+        sudo chown -R 1000:1000 ${{ steps.inputs.outputs.artifacts_dir }} ${{ steps.inputs.outputs.feed_dir }}
+        [ ! -d "${{ steps.inputs.outputs.ccache_dir }}" ] && sudo mkdir -p ${{ steps.inputs.outputs.ccache_dir }} 
+        [ -d "${{ steps.inputs.outputs.ccache_dir }}" ] && sudo chown -R 1000:1000 ${{ steps.inputs.outputs.ccache_dir }}
       shell: bash
-    - run: docker build --build-arg CONTAINER --build-arg ARCH -t sdk $GITHUB_ACTION_PATH
+    - run: set -xv; docker build --build-arg CONTAINER --build-arg ARCH -t sdk $GITHUB_ACTION_PATH
       shell: bash
     - run: |
+        set -xv;
         docker run --rm \
           --env BUILD_LOG \
+          --env CONFIG_CCACHE \
           --env EXTRA_FEEDS \
           --env FEEDNAME \
           --env IGNORE_ERRORS \
@@ -28,9 +38,12 @@ runs:
           --env V \
           -v ${{ steps.inputs.outputs.artifacts_dir }}:/artifacts \
           -v ${{ steps.inputs.outputs.feed_dir }}:/feed \
+          -v ${{ steps.inputs.outputs.ccache_dir }}:/${{ steps.inputs.outputs.ccache_dir_wrt }} \
           sdk
       shell: bash
     - run: sudo chown -R --reference=${{ steps.inputs.outputs.artifacts_dir }}/.. ${{ steps.inputs.outputs.artifacts_dir }}
       shell: bash
     - run: sudo chown -R --reference=${{ steps.inputs.outputs.feed_dir }}/.. ${{ steps.inputs.outputs.feed_dir }}
+      shell: bash
+    - run: sudo chown -R --reference=${{ steps.inputs.outputs.ccache_dir }}/.. ${{ steps.inputs.outputs.ccache_dir }}
       shell: bash
