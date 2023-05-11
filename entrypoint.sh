@@ -34,7 +34,8 @@ cat feeds.conf
 
 if [ -z "$CONFIG_CCACHE" ]; then
 	echo "CONFIG_CCACHE=$CONFIG_CCACHE" >> .config
-done
+	echo "Setting CONFIG_CCACHE=$CONFIG_CCACHE to .config" >> .config
+fi
 make defconfig > /dev/null
 
 if [ -z "$PACKAGES" ]; then
