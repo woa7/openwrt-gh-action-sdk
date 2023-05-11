@@ -11,9 +11,10 @@ runs:
       id: inputs
     - run: sudo chown -R 1000:1000 ${{ steps.inputs.outputs.artifacts_dir }} ${{ steps.inputs.outputs.feed_dir }}
       shell: bash
-    - run: docker build --build-arg CONTAINER --build-arg ARCH -t sdk $GITHUB_ACTION_PATH
+    - run: set -xv; docker build --build-arg CONTAINER --build-arg ARCH -t sdk $GITHUB_ACTION_PATH
       shell: bash
     - run: |
+        set -xv;
         docker run --rm \
           --env BUILD_LOG \
           --env EXTRA_FEEDS \
