@@ -15,8 +15,9 @@ runs:
       shell: bash
       id: inputs
     - run: |
-        sudo chown -R 1000:1000 ${{ steps.inputs.outputs.artifacts_dir }} ${{ steps.inputs.outputs.feed_dir }} ${{ steps.inputs.outputs.ccache_dir }}
-        sudo mkdir -p ${{ steps.inputs.outputs.ccache_dir }}
+        sudo chown -R 1000:1000 ${{ steps.inputs.outputs.artifacts_dir }} ${{ steps.inputs.outputs.feed_dir }}
+        [ -d "${{ steps.inputs.outputs.ccache_dir }}" ] && sudo mkdir -p ${{ steps.inputs.outputs.ccache_dir }} 
+        [ -d "${{ steps.inputs.outputs.ccache_dir }}" ] && sudo chown -R 1000:1000 ${{ steps.inputs.outputs.ccache_dir }}
       shell: bash
     - run: set -xv; docker build --build-arg CONTAINER --build-arg ARCH -t sdk $GITHUB_ACTION_PATH
       shell: bash
